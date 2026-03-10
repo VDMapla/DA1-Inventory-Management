@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management System</title>
+    <meta name="description" content="A modern seamless inventory dashboard connecting to WebAssembly">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="loading-overlay" class="overlay active">
+        <div class="spinner"></div>
+        <h2>Initializing WebAssembly Engine...</h2>
+        <p>Connecting to resilient Virtual File System (IDBFS)</p>
+    </div>
+
+    <div class="app-background"></div>
+
+    <div class="app-container" style="display: none;" id="main-app">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar glass-panel">
+            <div class="sidebar-brand">
+                <div class="logo"></div>
+                <h2>IMS Nexus</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item" data-view="add-product">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Add Product
+                </a>
+                <a href="#" class="nav-item" data-view="search-product">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Search Product
+                </a>
+                <a href="#" class="nav-item" data-view="update-stock">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    Update Stock
+                </a>
+                <a href="#" class="nav-item" data-view="delete-product">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    Delete Product
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar glass-panel">
+                <div class="header-titles">
+                    <h1 id="page-title">Inventory Overview</h1>
+                    <p class="subtitle" id="page-subtitle">Manage your stock, products, and reports.</p>
+                </div>
+                <div class="stats-card highlight-stat">
+                    <div class="stat-info">
+                        <span class="stat-label">Total Inventory Value</span>
+                        <span class="stat-value" id="total-value-display">$0.00</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                
+                <!-- Notification Banner -->
+                <div id="notification" class="notification-banner"></div>
+
+                <!-- Dashboard View -->
+                <section id="dashboard" class="view-section active">
+                    <div class="cards-grid">
+                        <div class="card glass-card full-width">
+                            <div class="card-header">
+                                <h3>Current Database Snapshot</h3>
+                                <button class="btn btn-secondary btn-sm" id="btn-refresh-inventory">Force Refresh</button>
+                            </div>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Product ID</th>
+                                            <th>Name</th>
+                                            <th>Price</th>
+                                            <th>Quantity</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inventory-tbody">
+                                        <!-- Rows populated by app.js -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="empty-state" class="empty-state hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                <h4>No Products Found</h4>
+                                <p>The WASM database is currently empty. Add products to see them here.</p>
+                            </div>
+                        </div>
+
+                        <div class="card warning-card glass-card">
+                            <div class="card-header">
+                                <h3>Low Stock Alerts</h3>
+                                <span class="badge badge-warning">Critical</span>
+                            </div>
+                            <div class="card-body">
+                                <ul class="alert-list" id="low-stock-list">
+                                    <li class="alert-item success">Loading...</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="card info-card glass-card">
+                            <div class="card-header">
+                                <h3>Live WASM Matrix</h3>
+                                <button class="btn-clear" id="btn-clear-log">Clear</button>
+                            </div>
+                            <div class="card-body console-terminal" id="system-console">
+                                <div class="log-entry"><span class="log-time">System</span> Awaiting WASM module loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Add Product View -->
+                <section id="add-product" class="view-section">
+                    <div class="card form-card glass-card">
+                        <h3>Deploy New Asset</h3>
+                        <p class="text-muted">Register a new product directly into the WebAssembly memory.</p>
+                        <form id="form-add" class="modern-form">
+                            <div class="form-group">
+                                <label for="add-id">Product ID</label>
+                                <input type="number" id="add-id" placeholder="e.g. 101" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="add-name">Product Name</label>
+                                <input type="text" id="add-name" placeholder="e.g. Mechanical Keyboard" required maxlength="49">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="add-price">Price ($)</label>
+                                    <input type="number" step="0.01" id="add-price" placeholder="0.00" required min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="add-qty">Initial Quantity</label>
+                                    <input type="number" id="add-qty" placeholder="0" required min="0">
+                                </div>
+                            </div>
+                            <div class="form-actions mt-2">
+                                <button type="submit" class="btn btn-primary pulse-btn">Write to Database</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Search Product View -->
+                <section id="search-product" class="view-section">
+                    <div class="card form-card glass-card">
+                        <h3>Deep Query</h3>
+                        <form id="form-search" class="modern-form">
+                            <div class="form-group search-group">
+                                <label for="search-id">Enter Product ID to query backend</label>
+                                <div class="input-with-button">
+                                    <input type="number" id="search-id" placeholder="e.g. 101" required min="1">
+                                    <button type="submit" class="btn btn-primary">Execute Search</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div id="search-results" class="results-container hidden">
+                            <!-- Populated by app.js -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Update Stock View -->
+                <section id="update-stock" class="view-section">
+                    <div class="card form-card glass-card">
+                        <h3>Inventory Transaction</h3>
+                        <form id="form-update" class="modern-form">
+                            <div class="form-group">
+                                <label for="update-id">Product Target ID</label>
+                                <input type="number" id="update-id" placeholder="e.g. 101" required min="1">
+                            </div>
+                            <div class="form-group mt-2">
+                                <label>Action Type</label>
+                                <div class="radio-group-modern">
+                                    <input type="radio" id="type-buy" name="update-type" value="1" checked>
+                                    <label for="type-buy" class="radio-btn">
+                                        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 24 24" height="18" width="18" xmlns="http://www.w3.org/2000/svg"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        Restock (Add)
+                                    </label>
+
+                                    <input type="radio" id="type-sell" name="update-type" value="2">
+                                    <label for="type-sell" class="radio-btn radio-sell">
+                                        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 24 24" height="18" width="18" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        Sale (Deduct)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group mt-2">
+                                <label for="update-qty">Quantity Modulator</label>
+                                <input type="number" id="update-qty" placeholder="e.g. 5" required min="1">
+                            </div>
+                            <div class="form-actions mt-2">
+                                <button type="submit" class="btn btn-primary">Dispatch Update Command</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Delete Product View -->
+                <section id="delete-product" class="view-section">
+                    <div class="card form-card danger-zone glass-card">
+                        <h3>Permanent Erasure</h3>
+                        <div class="danger-banner">
+                            <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" height="24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <p>This will execute a binary delete on the WebAssembly file stream. This action ensures permanent removal.</p>
+                        </div>
+                        <form id="form-delete" class="modern-form pt-2">
+                            <div class="form-group pb-2">
+                                <label for="delete-id">Product ID Target</label>
+                                <input type="number" id="delete-id" placeholder="e.g. 101" required min="1">
+                            </div>
+                            <div class="form-actions mt-2">
+                                <button type="submit" class="btn btn-danger pulse-btn-danger">Execute Deletion Sequence</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- The custom WebAssembly integration wrapper handles everything beautifully -->
+    <script src="app.js"></script>
+    <!-- Compiled binary scripts logic load -->
+    <script async src="index.js"></script>
+</body>
+</html>
